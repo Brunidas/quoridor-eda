@@ -1,10 +1,7 @@
 import asyncio
 import json
 from random import randint
-import string
 import sys
-from tkinter import E
-from numpy import true_divide
 import websockets
 import time
 
@@ -147,80 +144,187 @@ async def where_to_go(side: str, board:list, row:int, col:int):
                         row -= 2
                         return row,col
 
+async def right_back(side: str, board:list, row:int, col:int):
+    path = []
+    flag_row=row
+    flag_col=col
+
+    repeat_move=False
+        
+    if side == 'S':
+        while flag_row!=0:
+            #move up
+            if(flag_row-1)>0 :
+                if board[ flag_row -1 ][ flag_col ] != '-' and board[flag_row-2][flag_col] == ' ':  
+                    if ( flag_row-2, flag_col ) not in path: 
+                        flag_row -= 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #move right
+            if (flag_col + 1) < 17:
+                if board[ flag_row ][ flag_col + 1 ] != '|' and board[ flag_row ][ flag_col + 2 ] == ' ':
+                    if ( flag_row, flag_col+2 ) not in path: 
+                        flag_col += 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #move down
+            if (flag_row + 1) < 17 :
+                if board[ flag_row +1 ][ flag_col ] != '-' and board[ flag_row +2][ flag_col ] == ' ':
+                    if ( flag_row+2, flag_col ) not in path: 
+                        flag_row += 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #move left
+            if (flag_col - 1) > -1:
+                if board[ flag_row ][ flag_col - 1 ] != '|' and board[ flag_row ][ flag_col - 2 ] == ' ':
+                    if ( flag_row, flag_col-2 ) not in path: 
+                        flag_col -= 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #if we get here it means we can't move forward without repeating some movement
+            if repeat_move:
+
+                start = len(path)-2
+                for i in range(start,-1,-1 ):
+                    path.append( path[i] )
+                    flag_row = path[-1][0]
+                    flag_col = path[-1][1]
+
+    else: #N
+        while flag_row!=16:
+            #move down
+            if (flag_row + 1) < 17 :
+                if board[ flag_row +1 ][ flag_col ] != '-' and board[ flag_row +2][ flag_col ] == ' ':
+                    if ( flag_row+2, flag_col ) not in path: 
+                        flag_row += 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+    
+            #move right
+            if (flag_col + 1) < 17:
+                if board[ flag_row ][ flag_col + 1 ] != '|' and board[ flag_row ][ flag_col + 2 ] == ' ':
+                    if ( flag_row, flag_col+2 ) not in path: 
+                        flag_col += 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+            
+            #move up
+            if(flag_row-1)>0 :
+                if board[ flag_row -1 ][ flag_col ] != '-' and board[flag_row-2][flag_col] == ' ':  
+                    if ( flag_row-2, flag_col ) not in path: 
+                        flag_row -= 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #move left
+            if (flag_col + 1) < 17:
+                if board[ flag_row ][ flag_col + 1 ] != '|' and board[ flag_row ][ flag_col + 2 ] == ' ':
+                    if ( flag_row, flag_col+2 ) not in path: 
+                        flag_col += 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+            
+            #if we get here it means we can't move forward without repeating some movement
+            if repeat_move:
+                start = len(path)-2
+                for i in range(start,-1,-1 ):
+                    path.append( path[i] )
+                    flag_row = path[-1][0]
+                    flag_col = path[-1][1]
+
+    return path
+            
 
 async def make_path(side: str, main_board:list , from_row:int, from_col: int):
     len_main_board = len(main_board)
     path=[]
+
+    for row in range (len_main_board): #get index row and index col
+        for col in range (len_main_board):
+            if row==from_row and col==from_col:
+                flag_row=row
+                flag_col=col
+                break
+    
     if side == 'S':
-        for row in range (len_main_board): #make a func from here?
-            for col in range (len_main_board):
-                if row==from_row and col==from_col:
-                    # apply the rules to make a path
-                    flag_row=row
-                    flag_col=col
-                    while flag_row!=0:
+        while flag_row!=0:
+            if main_board[ flag_row - 1 ][flag_col] == '-':
+                flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
+                path.append( ( flag_row , flag_col) )
+                continue
+            
+            if main_board[ flag_row - 2 ][flag_col] == ' ':
+                flag_row -= 2
+                path.append( ( flag_row , flag_col) )
+                continue
 
-                        string = 'flag_row: ' + str(flag_row) + ' flag_col: '+ str(flag_col)
-                        print( string )
-                        
-                        if main_board[ flag_row - 1 ][flag_col] == '-':
-                            flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
-                            path.append( ( flag_row , flag_col) )
-                            continue
-                        
-                        if main_board[ flag_row - 2 ][flag_col] == ' ':
-                            flag_row -= 2
-                            path.append( ( flag_row , flag_col) )
-                            continue
+            if main_board[ flag_row - 2 ][flag_col] == 'S':
+                flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
+                path.append( ( flag_row , flag_col) )
+                continue
 
-                        if main_board[ flag_row - 2 ][flag_col] == 'S':
-                            flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
-                            path.append( ( flag_row , flag_col) )
-                            continue
+            if ( flag_row - 3 ) > -1 and main_board[ flag_row - 3 ][flag_col] == ' ':
+                flag_row -= 4
+                path.append( ( flag_row , flag_col) )
+                continue
+            else:
+                if (flag_col + 2) < 17 and main_board[ flag_row - 2 ][flag_col + 2 ] == ' ':
+                    flag_row -= 2
+                    flag_col += 2
+                    path.append( ( flag_row , flag_col) )
+                    continue
 
-                        #if main_board[ flag_row - 2 ][flag_col] == 'N':
-                        if ( flag_row - 3 ) > 0 and main_board[ flag_row - 3 ][flag_col] == ' ':
-                            flag_row -= 4
-                            path.append( ( flag_row , flag_col) )
-                            continue
+                if (flag_col - 2) > -1 and main_board[ flag_row - 2 ][flag_col - 2 ] == ' ':
+                    flag_row -= 2
+                    flag_col -= 2
+                    path.append( ( flag_row , flag_col) )
+                    continue
+
+                flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
+                path.append( ( flag_row , flag_col) )
+
+                '''
+                if main_board[ flag_row - 2 ][flag_col] == ' ' and main_board[ flag_row - 1 ][flag_col] == ' ':
+                    flag_row -= 2
+                else:
+                    if main_board[ flag_row - 2 ][flag_col] == 'N': #when it is in front of N
+                        if (flag_row - 4 ) > 0 : # can you jump it?
+                                #string = 'flag_row: ' + str(flag_row) + ' flag_col: '+ str(flag_col)
+                                #print( string )
+                                flag_row -= 4
                         else:
-                            if (flag_col + 2) < 17 and main_board[ flag_row - 2 ][flag_col + 2 ] == ' ':
+                            if (flag_col + 2) < 17 and main_board[ flag_row - 3 ][flag_col + 2 ] == ' ': # can you jump up to the right?
                                 flag_row -= 2
                                 flag_col += 2
-                                path.append( ( flag_row , flag_col) )
-                                continue
-
-                            if (flag_col - 2) > -1 and main_board[ flag_row - 2 ][flag_col - 2 ] == ' ':
+                            elif (flag_col - 2) > 0 and main_board[ flag_row - 3 ][flag_col - 2 ] == ' ':# can you jump up to the left?
                                 flag_row -= 2
                                 flag_col -= 2
-                                path.append( ( flag_row , flag_col) )
-                                continue
-
-                            flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
-                            path.append( ( flag_row , flag_col) )
-
-                        '''
-                        if main_board[ flag_row - 2 ][flag_col] == ' ' and main_board[ flag_row - 1 ][flag_col] == ' ':
-                            flag_row -= 2
-                        else:
-                            if main_board[ flag_row - 2 ][flag_col] == 'N': #when it is in front of N
-                                if (flag_row - 4 ) > 0 : # can you jump it?
-                                        #string = 'flag_row: ' + str(flag_row) + ' flag_col: '+ str(flag_col)
-                                        #print( string )
-                                        flag_row -= 4
-                                else:
-                                    if (flag_col + 2) < 17 and main_board[ flag_row - 3 ][flag_col + 2 ] == ' ': # can you jump up to the right?
-                                        flag_row -= 2
-                                        flag_col += 2
-                                    elif (flag_col - 2) > 0 and main_board[ flag_row - 3 ][flag_col - 2 ] == ' ':# can you jump up to the left?
-                                        flag_row -= 2
-                                        flag_col -= 2
-                                    else:
-                                        flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
                             else:
                                 flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
-                        path.append( ( flag_row , flag_col) )      
-                        '''   
+                    else:
+                        flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
+                path.append( ( flag_row , flag_col) )      
+                '''   
     #else: # with use a N
 
 
