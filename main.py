@@ -225,7 +225,7 @@ async def right_back(side: str, board:list, row:int, col:int):
                         repeat_move=True
             
             #move up
-            if(flag_row-1)>0 :
+            if(flag_row-1)>-1 :
                 if board[ flag_row -1 ][ flag_col ] != '-' and board[flag_row-2][flag_col] == ' ':  
                     if ( flag_row-2, flag_col ) not in path: 
                         flag_row -= 2
@@ -235,7 +235,7 @@ async def right_back(side: str, board:list, row:int, col:int):
                         repeat_move=True
 
             #move left
-            if (flag_col + 1) < 17:
+            if (flag_col + 1) > -1:
                 if board[ flag_row ][ flag_col + 1 ] != '|' and board[ flag_row ][ flag_col + 2 ] == ' ':
                     if ( flag_row, flag_col+2 ) not in path: 
                         flag_col += 2
@@ -254,6 +254,116 @@ async def right_back(side: str, board:list, row:int, col:int):
 
     return path
             
+async def left_back(side: str, board:list, row:int, col:int):
+    path = []
+    flag_row=row
+    flag_col=col
+
+    repeat_move=False
+    if side == 'S':
+        while flag_row!=0:
+            #move up
+            if(flag_row-1) > -1 :
+                if board[ flag_row -1 ][ flag_col ] != '-' and board[flag_row-2][flag_col] == ' ':  
+                    if ( flag_row-2, flag_col ) not in path: 
+                        flag_row -= 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #move left
+            if (flag_col - 1) > -1:
+                if board[ flag_row ][ flag_col - 1 ] != '|' and board[ flag_row ][ flag_col - 2 ] == ' ':
+                    if ( flag_row, flag_col-2 ) not in path: 
+                        flag_col -= 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #move down
+            if (flag_row + 1) < 17 :
+                if board[ flag_row +1 ][ flag_col ] != '-' and board[ flag_row +2][ flag_col ] == ' ':
+                    if ( flag_row+2, flag_col ) not in path: 
+                        flag_row += 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+            
+            #move right
+            if (flag_col + 1) < 17:
+                if board[ flag_row ][ flag_col + 1 ] != '|' and board[ flag_row ][ flag_col + 2 ] == ' ':
+                    if ( flag_row, flag_col+2 ) not in path: 
+                        flag_col += 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #if we get here it means we can't move forward without repeating some movement
+            if repeat_move:
+
+                start = len(path)-2
+                for i in range(start,-1,-1 ):
+                    path.append( path[i] )
+                    flag_row = path[-1][0]
+                    flag_col = path[-1][1]
+
+    else: #N
+        while flag_row!=16:
+
+            #move down
+            if (flag_row + 1) < 17 :
+                if board[ flag_row +1 ][ flag_col ] != '-' and board[ flag_row +2][ flag_col ] == ' ':
+                    if ( flag_row+2, flag_col ) not in path: 
+                        flag_row += 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #move left
+            if (flag_col - 1) > -1:
+                if board[ flag_row ][ flag_col - 1 ] != '|' and board[ flag_row ][ flag_col - 2 ] == ' ':
+                    if ( flag_row, flag_col-2 ) not in path: 
+                        flag_col -= 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #move up
+            if(flag_row-1) > -1:
+                if board[ flag_row -1 ][ flag_col ] != '-' and board[flag_row-2][flag_col] == ' ':  
+                    if ( flag_row-2, flag_col ) not in path: 
+                        flag_row -= 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #move right
+            if (flag_col + 1) < 17:
+                if board[ flag_row ][ flag_col + 1 ] != '|' and board[ flag_row ][ flag_col + 2 ] == ' ':
+                    if ( flag_row, flag_col+2 ) not in path: 
+                        flag_col += 2
+                        path.append( ( flag_row , flag_col) )
+                        continue
+                    else:
+                        repeat_move=True
+
+            #if we get here it means we can't move forward without repeating some movement
+            if repeat_move:
+                start = len(path)-2
+                for i in range(start,-1,-1 ):
+                    path.append( path[i] )
+                    flag_row = path[-1][0]
+                    flag_col = path[-1][1]
+    print(path)
+    return path
+
 
 async def make_path(side: str, main_board:list , from_row:int, from_col: int):
     len_main_board = len(main_board)
