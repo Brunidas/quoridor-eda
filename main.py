@@ -114,35 +114,6 @@ async def process_wall(websocket, request_data):
 
 
 # make by bruno ---
-async def where_to_go(side: str, board:list, row:int, col:int):
-    if side == 'S':
-        for r in range( len(board) ): #make a func from here?
-            for c in range( len(board) ):
-                if c == col and r == row:
-                    #string = 'c: '+ str(c) + ' col: ' + str(col) + ' r: ' + str(r) + ' row:' + str(row)
-                    #print( string )
-                    if ( col + 2 ) < 17 and board[ row ][ col + 1 ] == ' ': #move to right
-                        col += 2
-                        return row,col
-                    elif ( col - 2 ) > 0 and board[ row ][ col - 1 ] == ' ': #move to left
-                        col -= 2
-                        return row,col
-                    else:
-                        row += 2
-                        return row,col
-    else: # N
-        for r in range( len(board) ): #make a func from here?
-            for c in range( len(board) ):
-                if c == col and r == row:
-                    if ( col + 2 ) < 17 and board[ row ][ col + 1 ] == ' ': #move to right
-                        col += 2
-                        return row,col
-                    elif ( col - 2 ) > 0 and board[ row ][ col - 1 ] == ' ': #move to left
-                        col -= 2
-                        return row,col
-                    else:
-                        row -= 2
-                        return row,col
 
 async def right_back(side: str, board:list, row:int, col:int):
     path = []
@@ -433,34 +404,37 @@ async def make_path(side: str, main_board:list , from_row:int, from_col: int):
     
     if side == 'S':
         while flag_row!=0:
-            if main_board[ flag_row - 1 ][flag_col] == '-':
-                
-                path_of_right = await right_back(side,main_board,flag_row,flag_col)
+            
+            # if there is a wall in front
+            if main_board[ flag_row - 1 ][flag_col] == '-': 
+                right_path = await right_back(side,main_board,flag_row,flag_col)
                 left_path = await left_back(side,main_board,flag_row,flag_col)
-                flag_row, flag_col = await next_move( side, flag_row, flag_col, path_of_right, path_of_left)
+                flag_row, flag_col = await next_move( side, flag_row, flag_col, right_path, left_path)
 
                 path.append( ( flag_row , flag_col) )
                 continue
             
+            # if there is nothing in front
             if main_board[ flag_row - 2 ][flag_col] == ' ':
                 flag_row -= 2
                 path.append( ( flag_row , flag_col) )
                 continue
 
+            #if there is friend pawn in front
             if main_board[ flag_row - 2 ][flag_col] == 'S':
-                
-                path_of_right = await right_back(side,main_board,flag_row,flag_col)
-                path_of_left = await left_back(side,main_board,flag_row,flag_col)
-                flag_row, flag_col = await next_move( side, flag_row, flag_col, path_of_right, path_of_left)
+                right_path = await right_back(side,main_board,flag_row,flag_col)
+                left_path = await left_back(side,main_board,flag_row,flag_col)
+                flag_row, flag_col = await next_move( side, flag_row, flag_col, right_path, left_path)
 
                 path.append( ( flag_row , flag_col) )
                 continue
-
+            
+            # can i jump a pawn?
             if ( flag_row - 3 ) > -1 and main_board[ flag_row - 3 ][flag_col] == ' ':
                 flag_row -= 4
                 path.append( ( flag_row , flag_col) )
                 continue
-            else:
+            else: # diagonal jump
                 if (flag_col + 2) < 17 and main_board[ flag_row - 2 ][flag_col + 2 ] == ' ':
                     flag_row -= 2
                     flag_col += 2
@@ -473,15 +447,64 @@ async def make_path(side: str, main_board:list , from_row:int, from_col: int):
                     path.append( ( flag_row , flag_col) )
                     continue
 
-                path_of_right = await right_back(side,main_board,flag_row,flag_col)
-                path_of_left = await left_back(side,main_board,flag_row,flag_col)
-                flag_row, flag_col = await next_move( side, flag_row, flag_col, path_of_right, path_of_left)
+                right_path = await right_back(side,main_board,flag_row,flag_col)
+                left_path = await left_back(side,main_board,flag_row,flag_col)
+                flag_row, flag_col = await next_move( side, flag_row, flag_col, right_path, left_path)
 
                 path.append( ( flag_row , flag_col) )
                 continue
  
-    #else: # with use a N
+    else: # with use a N
+        while flag_row!=16:
 
+            # if there is a wall in back
+            if main_board[ flag_row + 1 ][flag_col] == '-': 
+                right_path = await right_back(side,main_board,flag_row,flag_col)
+                left_path = await left_back(side,main_board,flag_row,flag_col)
+                flag_row, flag_col = await next_move( side, flag_row, flag_col, right_path, left_path)
+
+                path.append( ( flag_row , flag_col) )
+                continue
+
+            # if there is nothing in back
+            if main_board[ flag_row + 2 ][flag_col] == ' ':
+                flag_row += 2
+                path.append( ( flag_row , flag_col) )
+                continue
+
+            #if there is friend pawn in back
+            if main_board[ flag_row + 2 ][flag_col] == 'N':
+                right_path = await right_back(side,main_board,flag_row,flag_col)
+                left_path = await left_back(side,main_board,flag_row,flag_col)
+                flag_row, flag_col = await next_move( side, flag_row, flag_col, right_path, left_path)
+
+                path.append( ( flag_row , flag_col) )
+                continue
+
+            # can i jump a pawn?
+            if ( flag_row + 3 ) < 17 and main_board[ flag_row + 3 ][flag_col] == ' ':
+                flag_row += 4
+                path.append( ( flag_row , flag_col) )
+                continue
+            else: # diagonal jump
+                if (flag_col + 2) < 17 and main_board[ flag_row + 2 ][flag_col + 2 ] == ' ':
+                    flag_row += 2
+                    flag_col += 2
+                    path.append( ( flag_row , flag_col) )
+                    continue
+
+                if (flag_col - 2) > -1 and main_board[ flag_row + 2 ][flag_col - 2 ] == ' ':
+                    flag_row += 2
+                    flag_col -= 2
+                    path.append( ( flag_row , flag_col) )
+                    continue
+
+                right_path = await right_back(side,main_board,flag_row,flag_col)
+                left_path = await left_back(side,main_board,flag_row,flag_col)
+                flag_row, flag_col = await next_move( side, flag_row, flag_col, right_path, left_path)
+
+                path.append( ( flag_row , flag_col) )
+                continue
 
     return path
 # -------
