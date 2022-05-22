@@ -361,9 +361,52 @@ async def left_back(side: str, board:list, row:int, col:int):
                     path.append( path[i] )
                     flag_row = path[-1][0]
                     flag_col = path[-1][1]
-    print(path)
     return path
 
+async def next_move(side:str,row:int,col:int,path_of_right:list,path_of_left:list ):
+    score_of_left = score_of_path(side, path_of_right ,row, col)
+    score_of_right = score_of_path(side, path_of_left,row, col)
+
+    if score_of_right > score_of_left:
+        new_row = path_of_right[0][0]
+        new_col = path_of_right[0][1]
+    else:
+        new_row = path_of_left[0][0]
+        new_col = path_of_left[0][1]
+
+    return new_row, new_col
+
+async def score_of_path(side:str ,path:list, row:int, col:int):
+    score=0
+    flag_path=[(row,col)] + path
+
+    if side == 'S':
+        for i in range( 1,len(flag_path) ):
+            move_from = flag_path[i-1]
+            move_to = flag_path[i]
+            
+            #up 
+            if( move_from[0] > move_to[0] and move_from[1] == move_to[1] ):
+                score += (16 - move_to[0])
+
+            #down
+            if( move_from[0] < move_to[0] and move_from[1] == move_to[1] ):
+                score -= (16 - move_to[0])
+                        
+    else:
+        for i in range( 1,len(flag_path) ):
+            move_from = flag_path[i-1]
+            move_to = flag_path[i]
+            
+            #up 
+            if( move_from[0] > move_to[0] and move_from[1] == move_to[1] ):
+                score -= move_from[0]
+
+            #down
+            if( move_from[0] < move_to[0] and move_from[1] == move_to[1] ):
+                score += move_to[0]
+
+    return score 
 
 async def make_path(side: str, main_board:list , from_row:int, from_col: int):
     len_main_board = len(main_board)
@@ -379,7 +422,11 @@ async def make_path(side: str, main_board:list , from_row:int, from_col: int):
     if side == 'S':
         while flag_row!=0:
             if main_board[ flag_row - 1 ][flag_col] == '-':
-                flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
+                
+                path_of_right = await right_back(side,main_board,flag_row,flag_col)
+                path_of_left = await left_back(side,main_board,flag_row,flag_col)
+                flag_row, flag_col = await next_move( side, flag_row, flag_col, path_of_right, path_of_left)
+
                 path.append( ( flag_row , flag_col) )
                 continue
             
@@ -389,7 +436,11 @@ async def make_path(side: str, main_board:list , from_row:int, from_col: int):
                 continue
 
             if main_board[ flag_row - 2 ][flag_col] == 'S':
-                flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
+                
+                path_of_right = await right_back(side,main_board,flag_row,flag_col)
+                path_of_left = await left_back(side,main_board,flag_row,flag_col)
+                flag_row, flag_col = await next_move( side, flag_row, flag_col, path_of_right, path_of_left)
+
                 path.append( ( flag_row , flag_col) )
                 continue
 
@@ -410,31 +461,13 @@ async def make_path(side: str, main_board:list , from_row:int, from_col: int):
                     path.append( ( flag_row , flag_col) )
                     continue
 
-                flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
-                path.append( ( flag_row , flag_col) )
+                path_of_right = await right_back(side,main_board,flag_row,flag_col)
+                path_of_left = await left_back(side,main_board,flag_row,flag_col)
+                flag_row, flag_col = await next_move( side, flag_row, flag_col, path_of_right, path_of_left)
 
-                '''
-                if main_board[ flag_row - 2 ][flag_col] == ' ' and main_board[ flag_row - 1 ][flag_col] == ' ':
-                    flag_row -= 2
-                else:
-                    if main_board[ flag_row - 2 ][flag_col] == 'N': #when it is in front of N
-                        if (flag_row - 4 ) > 0 : # can you jump it?
-                                #string = 'flag_row: ' + str(flag_row) + ' flag_col: '+ str(flag_col)
-                                #print( string )
-                                flag_row -= 4
-                        else:
-                            if (flag_col + 2) < 17 and main_board[ flag_row - 3 ][flag_col + 2 ] == ' ': # can you jump up to the right?
-                                flag_row -= 2
-                                flag_col += 2
-                            elif (flag_col - 2) > 0 and main_board[ flag_row - 3 ][flag_col - 2 ] == ' ':# can you jump up to the left?
-                                flag_row -= 2
-                                flag_col -= 2
-                            else:
-                                flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
-                    else:
-                        flag_row,flag_col = await where_to_go(side, main_board,flag_row,flag_col)
-                path.append( ( flag_row , flag_col) )      
-                '''   
+                path.append( ( flag_row , flag_col) )
+                continue
+ 
     #else: # with use a N
 
 

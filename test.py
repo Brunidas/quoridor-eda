@@ -1,6 +1,6 @@
 import unittest
 #from main import where_to_go, make_path, right_back
-from main import right_back,left_back
+from main import right_back,left_back,score_of_path
 
 class TestRightBack(unittest.IsolatedAsyncioTestCase):
     async def test_right_back_1(self):
@@ -25,7 +25,7 @@ class TestRightBack(unittest.IsolatedAsyncioTestCase):
         board = [M0,M1,M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13,M14,M15,M16] 
         value_list = [ (8,6),(6,6),(4,6),(6,6),(8,6),(10,6),(12,6),(12,8),(10,8),(8,8),(6,8),(4,8),(2,8),(0,8)]
         value_path = await right_back('S', board, 8, 4)
-        self.assertEquals( value_path, value_list )
+        self.assertEqual( value_path, value_list )
 
     async def test_right_back_2(self):
         '''
@@ -69,7 +69,7 @@ class TestRightBack(unittest.IsolatedAsyncioTestCase):
         board = [M0,M1,M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13,M14,M15,M16] 
         value_list = [ (8,6),(10,6),(12,6),(10,6),(8,6),(6,6),(4,6),(4,8),(6,8),(8,8),(10,8),(12,8),(14,8),(16,8) ]
         value_path = await right_back('N', board, 8, 4)
-        self.assertEquals( value_path, value_list )
+        self. assertEqual( value_path, value_list )
 
 
 class TestLeftBack(unittest.IsolatedAsyncioTestCase):
@@ -95,7 +95,7 @@ class TestLeftBack(unittest.IsolatedAsyncioTestCase):
         board = [M0,M1,M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13,M14,M15,M16] 
         value_list = [(8,10),(10,10),(12,10),(10,10),(8,10),(6,10),(4,10),(4,8),(6,8),(8,8),(10,8),(12,8),(14,8),(16,8)]
         value_path = await left_back('N', board, 8, 12)
-        self.assertEquals( value_path, value_list )
+        self.assertEqual( value_path, value_list )
 
     async def test_left_back_2(self):
         M0 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] #16
@@ -119,9 +119,18 @@ class TestLeftBack(unittest.IsolatedAsyncioTestCase):
         board = [M0,M1,M2,M3,M4,M5,M6,M7,M8,M9,M10,M11,M12,M13,M14,M15,M16] 
         value_list = [ (8,10),(6,10),(4,10),(6,10),(8,10),(10,10),(12,10),(12,8),(10,8),(8,8),(6,8),(4,8),(2,8),(0,8) ]
         value_path = await left_back('S', board, 8, 12)
-        self.assertEquals( value_path, value_list )
+        self.assertEqual( value_path, value_list )
 
-
+class TestScoreOfPath(unittest.IsolatedAsyncioTestCase):
+    async def test_score_of_path_1(self):
+        path = [(4,8),(6,8),(8,8),(10,8),(12,8),(14,8),(16,8)]
+        value_score = await score_of_path('N', path, 4, 8 )
+        self. assertEqual( value_score, 66 )
+    
+    async def test_score_of_path_2(self):
+        path = [(4,8),(2,8),(0,8),]
+        value_score = await score_of_path('S', path, 4, 8 )
+        self. assertEqual( value_score, 30 )
 
 if __name__ == "__main__":
    unittest.main()
