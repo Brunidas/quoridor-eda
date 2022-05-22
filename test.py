@@ -1,6 +1,6 @@
 import unittest
 #from main import where_to_go, make_path, right_back
-from main import right_back,left_back,score_of_path
+from main import next_move, right_back,left_back,path_score
 
 class TestRightBack(unittest.IsolatedAsyncioTestCase):
     async def test_right_back_1(self):
@@ -71,7 +71,6 @@ class TestRightBack(unittest.IsolatedAsyncioTestCase):
         value_path = await right_back('N', board, 8, 4)
         self. assertEqual( value_path, value_list )
 
-
 class TestLeftBack(unittest.IsolatedAsyncioTestCase):
     async def test_left_back_1(self):
         M0 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '] #16
@@ -121,16 +120,25 @@ class TestLeftBack(unittest.IsolatedAsyncioTestCase):
         value_path = await left_back('S', board, 8, 12)
         self.assertEqual( value_path, value_list )
 
-class TestScoreOfPath(unittest.IsolatedAsyncioTestCase):
-    async def test_score_of_path_1(self):
+class TestPathScore(unittest.IsolatedAsyncioTestCase):
+    async def test_path_score_1(self):
         path = [(4,8),(6,8),(8,8),(10,8),(12,8),(14,8),(16,8)]
-        value_score = await score_of_path('N', path, 4, 8 )
-        self. assertEqual( value_score, 66 )
+        value_score = await path_score('N', path, 4, 8 )
+        self.assertEqual( value_score, 66 )
     
-    async def test_score_of_path_2(self):
+    async def test_path_score_2(self):
         path = [(4,8),(2,8),(0,8),]
-        value_score = await score_of_path('S', path, 4, 8 )
-        self. assertEqual( value_score, 30 )
+        value_score = await path_score('S', path, 4, 8 )
+        self.assertEqual( value_score, 30 )
+
+class TestNextMove(unittest.IsolatedAsyncioTestCase):
+    async def test_next_move_1(self):
+        right_path = [ (8,6),(6,6),(4,6),(6,6),(8,6),(10,6),(12,6),(12,8),(10,8),(8,8),(6,8),(4,8),(2,8),(0,8)]
+        left_path = [ (8,2),(8,0),(6,0),(4,0),(2,0),(0,0) ]
+        row,col = await next_move('S',8,4, right_path, left_path)
+        self.assertAlmostEqual( row, 8 )
+        self.assertAlmostEqual( col, 2 )
+
 
 if __name__ == "__main__":
    unittest.main()

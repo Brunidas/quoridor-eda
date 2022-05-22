@@ -363,20 +363,32 @@ async def left_back(side: str, board:list, row:int, col:int):
                     flag_col = path[-1][1]
     return path
 
-async def next_move(side:str,row:int,col:int,path_of_right:list,path_of_left:list ):
-    score_of_left = score_of_path(side, path_of_right ,row, col)
-    score_of_right = score_of_path(side, path_of_left,row, col)
+async def get_row_col_next_move(path):
+    return path[0][0],path[0][1]
 
-    if score_of_right > score_of_left:
-        new_row = path_of_right[0][0]
-        new_col = path_of_right[0][1]
-    else:
-        new_row = path_of_left[0][0]
-        new_col = path_of_left[0][1]
+async def next_move(side:str,row:int,col:int,right_path:list,left_path:list ):
 
-    return new_row, new_col
+    if len(right_path) == len(left_path):
 
-async def score_of_path(side:str ,path:list, row:int, col:int):
+        left_score = await path_score(side, right_path ,row, col)
+        right_score = await path_score(side, left_path,row, col)
+        
+        if right_score > left_score:
+            new_row, new_col = await get_row_col_next_move(right_path)
+            return new_row, new_col
+        else:
+            new_row, new_col = await get_row_col_next_move(left_path)
+            return new_row, new_col
+    
+    if len(right_path) < len(left_path):
+        new_row, new_col = await get_row_col_next_move(right_path)
+        return new_row, new_col
+
+    if len(right_path) > len(left_path):
+        new_row, new_col = await get_row_col_next_move(left_path)
+        return new_row, new_col
+
+async def path_score(side:str, path:list, row:int, col:int):
     score=0
     flag_path=[(row,col)] + path
 
@@ -424,7 +436,7 @@ async def make_path(side: str, main_board:list , from_row:int, from_col: int):
             if main_board[ flag_row - 1 ][flag_col] == '-':
                 
                 path_of_right = await right_back(side,main_board,flag_row,flag_col)
-                path_of_left = await left_back(side,main_board,flag_row,flag_col)
+                left_path = await left_back(side,main_board,flag_row,flag_col)
                 flag_row, flag_col = await next_move( side, flag_row, flag_col, path_of_right, path_of_left)
 
                 path.append( ( flag_row , flag_col) )
