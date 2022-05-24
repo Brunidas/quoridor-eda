@@ -68,34 +68,77 @@ async def process_your_turn(websocket, request_data):
 
 
 async def process_move(websocket, request_data):
-        side = request_data['data']['side']
-        pawn_board = [[None for _ in range(9)] for _ in range(9)]
-        for row in range(9):
-            for col in range(9):
-                string_row = request_data['data']['board'][17*(row*2): 17*(row*2) + 17]
-                pawn_board[row][col] = string_row[col * 2]
-        for row in range(9):
-            for col in range(9):
-                if pawn_board[row][col] == side:
-                    from_row = row
-                    from_col = col
-                    to_col = col
+    side = request_data['data']['side']
+    
+    # make a matrix board
+    request_data_board = request_data['data']['board']
+    board = [
+        list(request_data_board[0:17]),
+        list(request_data_board[17:34]),
+        list(request_data_board[34:51]),
+        list(request_data_board[51:68]),
+        list(request_data_board[68:85]),
+        list(request_data_board[85:102]),
+        list(request_data_board[102:119]),
+        list(request_data_board[119:136]),
+        list(request_data_board[136:153]),
+        list(request_data_board[153:170]),
+        list(request_data_board[170:187]),
+        list(request_data_board[187:204]),
+        list(request_data_board[204:221]),
+        list(request_data_board[221:238]),
+        list(request_data_board[238:255]),
+        list(request_data_board[255:272]),
+        list(request_data_board[272:289])
+    ]
+
+    #select a pawn
+    done = False
+    if side == 'S':
+        for i, row in reversed( list( enumerate(board) ) ):
+            for j, _ in reversed( list( enumerate(row) ) ):
+                if board[i][j] == 'S':
+                    from_row_double = i
+                    from_col_double = j
+
+                    done = True
                     break
-        to_row = from_row + (1 if side == 'N' else -1)
-        if pawn_board[to_row][from_col] != ' ':
-            to_row = to_row + (1 if side == 'N' else -1)
-        await send(
-            websocket,
-            'move',
-            {
-                'game_id': request_data['data']['game_id'],
-                'turn_token': request_data['data']['turn_token'],
-                'from_row': from_row,
-                'from_col': from_col,
-                'to_row': to_row,
-                'to_col': to_col,
-            },
-        )
+            if done:
+                break   
+    else:
+        for i, row in list( enumerate(board) ):
+            for j, _ in list( enumerate(row) ):
+                if board[i][j] == 'N':
+                    from_row_double = i
+                    from_col_double = j
+
+                    done = True
+                    break
+            if done:
+                break   
+
+
+    path = await make_path(side,board,from_row_double,from_col_double)
+    to_row_double , to_col_double = await get_row_col_next_move(path)
+
+    to_row = to_row_double/2
+    to_col = to_col_double/2
+
+    from_row = from_row_double/2
+    from_col = from_col_double/2
+
+    await send(
+        websocket,
+        'move',
+        {
+            'game_id': request_data['data']['game_id'],
+            'turn_token': request_data['data']['turn_token'],
+            'from_row': from_row,
+            'from_col': from_col,
+            'to_row': to_row,
+            'to_col': to_col,
+        },
+    )
 
 
 async def process_wall(websocket, request_data):
@@ -335,7 +378,7 @@ async def left_back(side: str, board:list, row:int, col:int):
     return path
 
 async def get_row_col_next_move(path):
-    return path[0][0],path[0][1]
+    return path[0][0], path[0][1]
 
 async def next_move(side:str,row:int,col:int,right_path:list,left_path:list ):
 
@@ -505,7 +548,7 @@ async def make_path(side: str, main_board:list , from_row:int, from_col: int):
 
                 path.append( ( flag_row , flag_col) )
                 continue
-
+            
     return path
 # -------
 

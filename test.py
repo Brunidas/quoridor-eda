@@ -45,9 +45,14 @@ class TestNextMove(unittest.IsolatedAsyncioTestCase):
 
 
 class TestMakePath(unittest.IsolatedAsyncioTestCase):
-    async def test_make_path(self):
+    async def test_make_path_1(self):
         path = [ (14,4),(12,4),(10,4),(8,4),(8,2),(8,0),(6,0),(4,0),(2,0),(0,0) ]
         check_path = await make_path('S', board_1, 16, 4)
+        self.assertListEqual( check_path, path )
+
+    async def test_make_path_2(self):
+        path = [ (0,7) ]
+        check_path = await make_path('S', board_5, 2, 7)
         self.assertListEqual( check_path, path )
 
 
